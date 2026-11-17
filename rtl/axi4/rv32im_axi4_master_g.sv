@@ -1,0 +1,153 @@
+module rv32im_axi4_master_g #(
+    parameter int ADDR_BITS = 32,
+    parameter int DATA_BITS = 32,
+    parameter int ID_BITS = 4,
+    parameter int LEN_BITS = 8,
+    parameter int STRB_BITS = DATA_BITS / 8
+) (
+    input logic clk,
+    input logic rst_n,
+
+    input logic rd_req_valid,
+    output logic rd_req_ready,
+    input logic [ADDR_BITS-1:0] rd_req_addr,
+    input logic [LEN_BITS-1:0] rd_req_len,
+    input logic [2:0] rd_req_size,
+    input logic [ID_BITS-1:0] rd_req_id,
+
+    output logic rd_data_valid,
+    input logic rd_data_ready,
+    output logic [DATA_BITS-1:0] rd_data,
+    output logic rd_data_last,
+    output logic [ID_BITS-1:0] rd_data_id,
+    output logic [1:0] rd_data_resp,
+
+    input logic wr_req_valid,
+    output logic wr_req_ready,
+    input logic [ADDR_BITS-1:0] wr_req_addr,
+    input logic [LEN_BITS-1:0] wr_req_len,
+    input logic [2:0] wr_req_size,
+    input logic [ID_BITS-1:0] wr_req_id,
+
+    input logic wr_data_valid,
+    output logic wr_data_ready,
+    input logic [DATA_BITS-1:0] wr_data,
+    input logic [STRB_BITS-1:0] wr_strb,
+    input logic wr_data_last,
+
+    output logic wr_resp_valid,
+    input logic wr_resp_ready,
+    output logic [ID_BITS-1:0] wr_resp_id,
+    output logic [1:0] wr_resp,
+
+    output logic [ID_BITS-1:0] m_axi_arid,
+    output logic [ADDR_BITS-1:0] m_axi_araddr,
+    output logic [LEN_BITS-1:0] m_axi_arlen,
+    output logic [2:0] m_axi_arsize,
+    output logic [1:0] m_axi_arburst,
+    output logic m_axi_arvalid,
+    input logic m_axi_arready,
+
+    input logic [ID_BITS-1:0] m_axi_rid,
+    input logic [DATA_BITS-1:0] m_axi_rdata,
+    input logic [1:0] m_axi_rresp,
+    input logic m_axi_rlast,
+    input logic m_axi_rvalid,
+    output logic m_axi_rready,
+
+    output logic [ID_BITS-1:0] m_axi_awid,
+    output logic [ADDR_BITS-1:0] m_axi_awaddr,
+    output logic [LEN_BITS-1:0] m_axi_awlen,
+    output logic [2:0] m_axi_awsize,
+    output logic [1:0] m_axi_awburst,
+    output logic m_axi_awvalid,
+    input logic m_axi_awready,
+
+    output logic [DATA_BITS-1:0] m_axi_wdata,
+    output logic [STRB_BITS-1:0] m_axi_wstrb,
+    output logic m_axi_wlast,
+    output logic m_axi_wvalid,
+    input logic m_axi_wready,
+
+    input logic [ID_BITS-1:0] m_axi_bid,
+    input logic [1:0] m_axi_bresp,
+    input logic m_axi_bvalid,
+    output logic m_axi_bready
+);
+
+    rv32im_axi4_read_engine_g #(
+        .ADDR_BITS(ADDR_BITS),
+        .DATA_BITS(DATA_BITS),
+        .ID_BITS(ID_BITS),
+        .LEN_BITS(LEN_BITS)
+    ) u_read_engine (
+        .clk(clk),
+        .rst_n(rst_n),
+        .req_valid(rd_req_valid),
+        .req_ready(rd_req_ready),
+        .req_addr(rd_req_addr),
+        .req_len(rd_req_len),
+        .req_size(rd_req_size),
+        .req_id(rd_req_id),
+        .resp_valid(rd_data_valid),
+        .resp_ready(rd_data_ready),
+        .resp_data(rd_data),
+        .resp_id(rd_data_id),
+        .resp_code(rd_data_resp),
+        .resp_last(rd_data_last),
+        .m_axi_arid(m_axi_arid),
+        .m_axi_araddr(m_axi_araddr),
+        .m_axi_arlen(m_axi_arlen),
+        .m_axi_arsize(m_axi_arsize),
+        .m_axi_arburst(m_axi_arburst),
+        .m_axi_arvalid(m_axi_arvalid),
+        .m_axi_arready(m_axi_arready),
+        .m_axi_rid(m_axi_rid),
+        .m_axi_rdata(m_axi_rdata),
+        .m_axi_rresp(m_axi_rresp),
+        .m_axi_rlast(m_axi_rlast),
+        .m_axi_rvalid(m_axi_rvalid),
+        .m_axi_rready(m_axi_rready)
+    );
+
+    rv32im_axi4_write_engine_g #(
+        .ADDR_BITS(ADDR_BITS),
+        .DATA_BITS(DATA_BITS),
+        .ID_BITS(ID_BITS),
+        .LEN_BITS(LEN_BITS)
+    ) u_write_engine (
+        .clk(clk),
+        .rst_n(rst_n),
+        .req_valid(wr_req_valid),
+        .req_ready(wr_req_ready),
+        .req_addr(wr_req_addr),
+        .req_len(wr_req_len),
+        .req_size(wr_req_size),
+        .req_id(wr_req_id),
+        .data_valid(wr_data_valid),
+        .data_ready(wr_data_ready),
+        .data(wr_data),
+        .strb(wr_strb),
+        .resp_valid(wr_resp_valid),
+        .resp_ready(wr_resp_ready),
+        .resp_id(wr_resp_id),
+        .resp_code(wr_resp),
+        .m_axi_awid(m_axi_awid),
+        .m_axi_awaddr(m_axi_awaddr),
+        .m_axi_awlen(m_axi_awlen),
+        .m_axi_awsize(m_axi_awsize),
+        .m_axi_awburst(m_axi_awburst),
+        .m_axi_awvalid(m_axi_awvalid),
+        .m_axi_awready(m_axi_awready),
+        .m_axi_wdata(m_axi_wdata),
+        .m_axi_wstrb(m_axi_wstrb),
+        .m_axi_wlast(m_axi_wlast),
+        .m_axi_wvalid(m_axi_wvalid),
+        .m_axi_wready(m_axi_wready),
+        .m_axi_bid(m_axi_bid),
+        .m_axi_bresp(m_axi_bresp),
+        .m_axi_bvalid(m_axi_bvalid),
+        .m_axi_bready(m_axi_bready)
+    );
+
+endmodule
